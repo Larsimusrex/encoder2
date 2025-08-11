@@ -277,6 +277,7 @@ fn (mut encoder Encoder) encode_enum[T](val T) {
 			
 			enum_val = enum_val[i + 1..enum_val.len - 1]
 		}
+		enum_val = '"' + enum_val + '"'
 		unsafe { encoder.output.push_many(enum_val.str, enum_val.len) }
 	}
 }

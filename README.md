@@ -26,5 +26,8 @@ Experimental json encoder entirely written in V.
 	- [ ] options (see above)
 	- [ ] arrays/maps of options (see above)
 	- [ ] custom encoders
-- [ ] prettify
+- [x] prettify
+- [ ] attributes
+	- [ ] json: name
+	- [ ] json: - / skip
 

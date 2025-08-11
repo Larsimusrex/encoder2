@@ -5,6 +5,7 @@ pub struct EncoderOptions {
 pub:
 	prettify      bool
 	indent_string string = '    '
+	newline_string string = '\n'
 
 	enum_as_int bool
 }
@@ -13,7 +14,7 @@ struct Encoder {
 	EncoderOptions
 mut:
 	level int
-	indent string
+	prefix string
 	
 	output []u8 = []u8{cap: 2048}
 }
@@ -100,28 +101,59 @@ fn (mut encoder Encoder) encode_null() {
 
 fn (mut encoder Encoder) encode_array[T](val []T) {
 	encoder.output << `[`
-	for i, item in val {
-		if i > 0 {
-			encoder.output << `,`
-		}
-		encoder.encode_value(item)
+	if encoder.prettify {
+		encoder.increment_level()
+		encoder.add_indent()
 	}
+	
+	for i, item in val {
+		encoder.encode_value(item)
+		if i < val.len - 1 {
+			encoder.output << `,`
+			if encoder.prettify {
+				encoder.add_indent()
+			}
+		} else {
+			if encoder.prettify {
+				encoder.decrement_level()
+				encoder.add_indent()
+			}
+		}
+	}
+	
 	encoder.output << `]`
 }
 
 fn (mut encoder Encoder) encode_map[T](val map[string]T) {
 	encoder.output << `{`
-	mut first := true
+	if encoder.prettify {
+		encoder.increment_level()
+		encoder.add_indent()
+	}
+	
+	mut i := 0
 	for key, value in val {
-		if first {
-			first = false
-		} else {
-			encoder.output << `,`
-		}
 		encoder.encode_string(key)
 		encoder.output << `:`
+		if encoder.prettify {
+			encoder.output << ` `
+		}
 		encoder.encode_value(value)
+		if i < val.len - 1 {
+			encoder.output << `,`
+			if encoder.prettify {
+				encoder.add_indent()
+			}
+		} else {
+			if encoder.prettify {
+				encoder.decrement_level()
+				encoder.add_indent()
+			}
+		}
+		
+		i++
 	}
+	
 	encoder.output << `}`
 }
 
@@ -152,18 +184,51 @@ fn (mut encoder Encoder) encode_sumtype[T](val T) {
 
 fn (mut encoder Encoder) encode_struct[T](val T) {
 	encoder.output << `{`
+	if encoder.prettify {
+		encoder.increment_level()
+		encoder.add_indent()
+	}
 	
-	mut first := true
+	mut i := 0
+	mut last := -1
+	$for _ in T.fields {
+		last++
+	}
 	$for field in T.fields {
-		if first {
-			first = false
-		} else {
-			encoder.output << `,`
-		}
 		encoder.encode_string(field.name)
 		encoder.output << `:`
+		if encoder.prettify {
+			encoder.output << ` `
+		}
 		encoder.encode_value(val.$(field.name))
+		if i < last {
+			encoder.output << `,`
+			if encoder.prettify {
+				encoder.add_indent()
+			}
+		} else {
+			if encoder.prettify {
+				encoder.decrement_level()
+				encoder.add_indent()
+			}
+		}
+		
+		i++
 	}
 	
 	encoder.output << `}`
+}
+
+fn (mut encoder Encoder) increment_level() {
+	encoder.level++
+	encoder.prefix = encoder.newline_string + encoder.indent_string.repeat(encoder.level)
+}
+
+fn (mut encoder Encoder) decrement_level() {
+	encoder.level--
+	encoder.prefix = encoder.newline_string + encoder.indent_string.repeat(encoder.level)
+}
+
+fn (mut encoder Encoder) add_indent() {
+	unsafe { encoder.output.push_many(encoder.prefix.str, encoder.prefix.len) }
 }

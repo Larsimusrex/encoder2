@@ -30,4 +30,6 @@ Experimental json encoder entirely written in V.
 - [ ] attributes
 	- [ ] json: name
 	- [ ] json: - / skip
-
+- [x] string escapes
+	- [x] control characters
+	- [x] unicode

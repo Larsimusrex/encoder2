@@ -8,6 +8,8 @@ pub:
 	newline_string string = '\n'
 
 	enum_as_int bool
+	
+	escape_unicode bool
 }
 
 struct Encoder {
@@ -78,7 +80,112 @@ fn (mut encoder Encoder) encode_value[T](val T) {
 
 fn (mut encoder Encoder) encode_string(val string) {
 	encoder.output << `"`
-	unsafe { encoder.output.push_many(val.str, val.len) }
+	mut buffer_start := 0
+	mut buffer_end := 0
+	for buffer_end < val.len  {
+		character := val[buffer_end]
+		match character {
+			`"`, `\\` {
+				unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+				buffer_end++
+				buffer_start = buffer_end
+				
+				encoder.output << `\\`
+				encoder.output << character
+			}
+			`\b` {
+				unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+				buffer_end++
+				buffer_start = buffer_end
+				
+				encoder.output << `\\`
+				encoder.output << `b`
+			}
+			`\n` {
+				unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+				buffer_end++
+				buffer_start = buffer_end
+				
+				encoder.output << `\\`
+				encoder.output << `n`
+			}
+			`\f` {
+				unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+				buffer_end++
+				buffer_start = buffer_end
+				
+				encoder.output << `\\`
+				encoder.output << `f`
+			}
+			`\t` {
+				unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+				buffer_end++
+				buffer_start = buffer_end
+				
+				encoder.output << `\\`
+				encoder.output << `t`
+			}
+			`\r` {
+				unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+				buffer_end++
+				buffer_start = buffer_end
+				
+				encoder.output << `\\`
+				encoder.output << `r`
+			}
+			
+			else {
+				if character < 0x20 { // control characters
+					unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+					buffer_end++
+					buffer_start = buffer_end
+					
+					encoder.output << `\\`
+					
+					hex_string := '${character:04X}'
+					
+					unsafe { encoder.output.push_many(hex_string.str, 4) }
+					
+					continue
+				} 
+				if encoder.escape_unicode { 
+					if character >= 0b1111_0000 { // four bytes
+						// maybe add surrogate pair encoding for legacy systems
+						buffer_end += 4
+						continue
+					} else if character >= 0b1110_0000 { // three bytes
+						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+						hex_string := '${val[buffer_end..buffer_end+3].bytes().byterune() or {0}:04X}'
+						
+						buffer_end += 3
+						buffer_start = buffer_end
+						
+						encoder.output << `\\`
+						
+						unsafe { encoder.output.push_many(hex_string.str, 4) }
+						
+						continue
+					} else if character >= 0b1100_0000 { // two bytes
+						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+						hex_string := '${val[buffer_end..buffer_end+2].bytes().byterune() or {0}:04X}'
+						
+						buffer_end += 2
+						buffer_start = buffer_end
+						
+						encoder.output << `\\`
+						
+						unsafe { encoder.output.push_many(hex_string.str, 4) }
+						
+						continue
+					}
+				}
+				
+				buffer_end++
+			}
+		}
+	}
+	unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+	
 	encoder.output << `"`
 }
 

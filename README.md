@@ -21,7 +21,7 @@ Experimental json encoder entirely written in V.
 	- [x] primitive types
 	- [x] arrays & maps
 	- [x] enums
-	- [ ] sumtypes (see https://github.com/vlang/v/issues/25085)
+	- [x] sumtypes
 	- [x] structs
 	- [ ] options (see above)
 	- [ ] arrays/maps of options (see above)

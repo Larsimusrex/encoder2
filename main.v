@@ -44,8 +44,8 @@ fn main() {
 	println(json.encode(EnumAlias(TestEnum.c), enum_as_int: true))
 	println(json.encode(Sum(10)))
 	println(json.encode(Sum('hi')))
-// 	println(json.encode(SumAlias(10)))
-// 	println(json.encode(SumAlias('hi')))
+	println(json.encode(SumAlias(10)))
+	println(json.encode(SumAlias('hi')))
 	println(json.encode(Basic{
 		a: 10
 		b: 'hi'

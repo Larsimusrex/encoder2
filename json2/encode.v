@@ -1,7 +1,5 @@
 module json2
 
-import datatypes
-
 @[params]
 pub struct EncoderOptions {
 pub:
@@ -80,7 +78,7 @@ fn (mut encoder Encoder) encode_value[T](val T) {
 	} $else $if T is Encodable { // uses T, because alias could be implementing JsonEncoder, while the base type does not
 		encoder.encode_custom2(val)
 	} $else $if T.unaliased_typ is $struct {
-		encoder.encode_struct(val)
+		unsafe { encoder.encode_struct(val) }
 	}
 }
 
@@ -304,7 +302,7 @@ fn (mut encoder Encoder) encode_sumtype[T](val T) {
 fn (mut encoder Encoder) encode_struct[T](val T) {
 	encoder.output << `{`
 
-	static key_names := &[]string( unsafe {nil} )
+	static key_names := &[]string( nil )
 	
 	if key_names == nil {
 		key_names = &[]string{}

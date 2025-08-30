@@ -14,6 +14,7 @@ enum TestEnum {
 	b
 	c = 10
 }
+
 type EnumAlias = TestEnum
 
 type Sum = int | string
@@ -24,6 +25,7 @@ struct Basic {
 	b string
 	c bool
 }
+
 type BasicAlias = Basic
 
 struct Opt {
@@ -37,7 +39,7 @@ struct CustomString {
 }
 
 pub fn (cs CustomString) to_json() string {
-	return '"<<<' + cs.data + '>>>"' 
+	return '"<<<' + cs.data + '>>>"'
 }
 
 type CustomStringAlias = CustomString
@@ -63,14 +65,14 @@ pub fn (cb CustomBig) to_json() string {
 }
 
 struct NamedFields {
-	a int @[json: 'id']
+	a    int    @[json: 'id']
 	name string @[json: 'Name']
 }
 
 type NamedFieldsAlias = NamedFields
 
 struct SkipFields {
-	a int @[json: '-']
+	a    int    @[json: '-']
 	name string @[skip]
 }
 
@@ -106,34 +108,79 @@ fn main() {
 	println(json.encode(BasicAlias{
 		a: 10
 		b: 'hi'
-	c: true
+		c: true
 	}))
-	
-	println(json.encode([{'hi': Basic{a: 1 b: 'a' c: false}, 'bye': Basic{a: 2 b: 'b' c: true}}, {'hi2': Basic{a: 3 b: 'c' c: false}, 'bye2': Basic{a: 4 b: 'd' c: true}}]))
-	println(json.encode([{'hi': Basic{a: 1 b: 'a' c: false}, 'bye': Basic{a: 2 b: 'b' c: true}}, {'hi2': Basic{a: 3 b: 'c' c: false}, 'bye2': Basic{a: 4 b: 'd' c: true}}], prettify: true))
-	
+
+	println(json.encode([
+		{
+			'hi':  Basic{ a: 1, b: 'a', c: false }
+			'bye': Basic{
+				a: 2
+				b: 'b'
+				c: true
+			}
+		},
+		{
+			'hi2':  Basic{
+				a: 3
+				b: 'c'
+				c: false
+			}
+			'bye2': Basic{
+				a: 4
+				b: 'd'
+				c: true
+			}
+		},
+	]))
+	println(json.encode([
+		{
+			'hi':  Basic{ a: 1, b: 'a', c: false }
+			'bye': Basic{
+				a: 2
+				b: 'b'
+				c: true
+			}
+		},
+		{
+			'hi2':  Basic{
+				a: 3
+				b: 'c'
+				c: false
+			}
+			'bye2': Basic{
+				a: 4
+				b: 'd'
+				c: true
+			}
+		},
+	],
+		prettify: true
+	))
+
 	println(json.encode('normal escapes: ", \\ special control escapes: \b, \n, \f, \t, \r, other control escapes: \0, \e'))
 	println(json.encode('ascii, é, 한, 😀, ascii'))
 	println(json.encode('ascii, é, 한, 😀, ascii', escape_unicode: true))
-	
+
 	println(json.encode(Opt{none}))
 	println(json.encode(Opt{99}))
-	
+
 	println(json.encode(OptAlias{none}))
 	println(json.encode(OptAlias{99}))
 
 	println(json.encode(CustomString{'hi'}))
 	println(json.encode(CustomStringAlias{'hi'}))
-	
+
 	println(json.encode(Null{}))
 	println(json.encode(CustomTime(time.now())))
 	println(json.encode(CustomBig(big.integer_from_i64(1234567890))))
-	
-	println(json.encode(NamedFields{a: 1 name: 'john'}))
-	println(json.encode(NamedFieldsAlias{a: 1 name: 'john'}))
-	
-	println(json.encode(SkipFields{a: 1 name: 'john'}))
-	println(json.encode(SkipFieldsAlias{a: 1 name: 'john'}))
-	println(json.encode(SkipFields{a: 1 name: 'john'}, prettify: true))
-	
+
+	println(json.encode(NamedFields{ a: 1, name: 'john' }))
+	println(json.encode(NamedFieldsAlias{ a: 1, name: 'john' }))
+
+	println(json.encode(SkipFields{ a: 1, name: 'john' }))
+	println(json.encode(SkipFieldsAlias{ a: 1, name: 'john' }))
+	println(json.encode(SkipFields{ a: 1, name: 'john' },
+		prettify: true
+	))
 }

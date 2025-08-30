@@ -154,19 +154,24 @@ fn (mut encoder Encoder) encode_string(val string) {
 				if encoder.escape_unicode {
 					if character >= 0b1111_0000 { // four bytes
 						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
-						unicode_point_low := val[buffer_end..buffer_end + 4].bytes().byterune() or {0} - 0x10000
-						
-						hex_string := '\\u${0xD800 + ((unicode_point_low >> 10) & 0x3FF):04X}\\u${0xDC00 + (unicode_point_low & 0x3FF):04X}'
-						
+						unicode_point_low := val[buffer_end..buffer_end + 4].bytes().byterune() or {
+							0
+						} - 0x10000
+
+						hex_string := '\\u${0xD800 + ((unicode_point_low >> 10) & 0x3FF):04X}\\u${
+							0xDC00 + (unicode_point_low & 0x3FF):04X}'
+
 						buffer_end += 4
 						buffer_start = buffer_end
-						
+
 						unsafe { encoder.output.push_many(hex_string.str, 12) }
-						
+
 						continue
 					} else if character >= 0b1110_0000 { // three bytes
 						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
-						hex_string := '\\u${val[buffer_end..buffer_end + 3].bytes().byterune() or { 0 }:04X}'
+						hex_string := '\\u${val[buffer_end..buffer_end + 3].bytes().byterune() or {
+							0
+						}:04X}'
 
 						buffer_end += 3
 						buffer_start = buffer_end
@@ -176,7 +181,9 @@ fn (mut encoder Encoder) encode_string(val string) {
 						continue
 					} else if character >= 0b1100_0000 { // two bytes
 						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
-						hex_string := '\\u${val[buffer_end..buffer_end + 2].bytes().byterune() or { 0 }:04X}'
+						hex_string := '\\u${val[buffer_end..buffer_end + 2].bytes().byterune() or {
+							0
+						}:04X}'
 
 						buffer_end += 2
 						buffer_start = buffer_end
@@ -302,29 +309,29 @@ fn (mut encoder Encoder) encode_sumtype[T](val T) {
 fn (mut encoder Encoder) encode_struct[T](val T) {
 	encoder.output << `{`
 
-	static key_names := &[]string( nil )
-	
+	static key_names := &[]string(nil)
+
 	if key_names == nil {
 		key_names = &[]string{}
-		
+
 		$for field in T.fields {
 			mut is_skip := false
 			mut is_unnamed := true
-			
+
 			for attr in field.attrs {
 				if attr == 'skip' {
 					is_skip = true
 					break
 				}
-				
+
 				if attr.starts_with('json:') {
 					if attr == 'json: -' {
 						is_skip = true
 						break
 					}
-					
+
 					name := attr[6..]
-					
+
 					is_unnamed = false
 					key_names << name
 				}
@@ -336,22 +343,22 @@ fn (mut encoder Encoder) encode_struct[T](val T) {
 			}
 		}
 	}
-	
+
 	mut i := 0
 	if key_names.len > 0 {
 		if encoder.prettify {
 			encoder.increment_level()
 			encoder.add_indent()
 		}
-		
+
 		$for field in T.fields {
 			encoder.encode_string(key_names[i])
-			
+
 			encoder.output << `:`
 			if encoder.prettify {
 				encoder.output << ` `
 			}
-			
+
 			$if field is $option {
 				if val.$(field.name) == none {
 					unsafe { encoder.output.push_many(null_string.str, null_string.len) }
@@ -361,7 +368,7 @@ fn (mut encoder Encoder) encode_struct[T](val T) {
 			} $else {
 				encoder.encode_value(val.$(field.name))
 			}
-			
+
 			if i < key_names.len - 1 {
 				encoder.output << `,`
 				if encoder.prettify {
@@ -373,11 +380,11 @@ fn (mut encoder Encoder) encode_struct[T](val T) {
 					encoder.add_indent()
 				}
 			}
-			
+
 			i++
 		}
 	}
-	
+
 	encoder.output << `}`
 }
 

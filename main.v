@@ -3,7 +3,6 @@ module main
 import json2 as json
 import time
 import math.big
-import x.json2
 
 type StrAlias = string
 type BoolAlias = bool
@@ -63,6 +62,20 @@ pub fn (cb CustomBig) to_json() string {
 	return cb.str()
 }
 
+struct NamedFields {
+	a int @[json: 'id']
+	name string @[json: 'Name']
+}
+
+type NamedFieldsAlias = NamedFields
+
+struct SkipFields {
+	a int @[json: '-']
+	name string @[skip]
+}
+
+type SkipFieldsAlias = SkipFields
+
 fn main() {
 	println(json.encode('hello'))
 	println(json.encode(StrAlias('hello')))
@@ -115,4 +128,12 @@ fn main() {
 	println(json.encode(Null{}))
 	println(json.encode(CustomTime(time.now())))
 	println(json.encode(CustomBig(big.integer_from_i64(1234567890))))
+	
+	println(json.encode(NamedFields{a: 1 name: 'john'}))
+	println(json.encode(NamedFieldsAlias{a: 1 name: 'john'}))
+	
+	println(json.encode(SkipFields{a: 1 name: 'john'}))
+	println(json.encode(SkipFieldsAlias{a: 1 name: 'john'}))
+	println(json.encode(SkipFields{a: 1 name: 'john'}, prettify: true))
+	
 }

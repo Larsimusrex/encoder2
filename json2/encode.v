@@ -1,5 +1,7 @@
 module json2
 
+import datatypes
+
 @[params]
 pub struct EncoderOptions {
 pub:
@@ -75,6 +77,8 @@ fn (mut encoder Encoder) encode_value[T](val T) {
 		encoder.encode_sumtype(val)
 	} $else $if T is JsonEncoder { // uses T, because alias could be implementing JsonEncoder, while the base type does not
 		encoder.encode_custom(val)
+	} $else $if T is Encodable { // uses T, because alias could be implementing JsonEncoder, while the base type does not
+		encoder.encode_custom2(val)
 	} $else $if T.unaliased_typ is $struct {
 		encoder.encode_struct(val)
 	}
@@ -296,53 +300,96 @@ fn (mut encoder Encoder) encode_sumtype[T](val T) {
 	}
 }
 
+@[unsafe]
 fn (mut encoder Encoder) encode_struct[T](val T) {
 	encoder.output << `{`
-	if encoder.prettify {
-		encoder.increment_level()
-		encoder.add_indent()
-	}
 
-	mut i := 0
-	mut last := -1
-	$for _ in T.fields {
-		last++
-	}
-	$for field in T.fields {
-		encoder.encode_string(field.name)
-		encoder.output << `:`
-		if encoder.prettify {
-			encoder.output << ` `
-		}
-		$if field is $option {
-			if val.$(field.name) == none {
-				unsafe { encoder.output.push_many(null_string.str, null_string.len) }
-			} else {
-				encoder.encode_value(val.$(field.name))
+	static key_names := &[]string( unsafe {nil} )
+	
+	if key_names == nil {
+		key_names = &[]string{}
+		
+		$for field in T.fields {
+			mut is_skip := false
+			mut is_unnamed := true
+			
+			for attr in field.attrs {
+				if attr == 'skip' {
+					is_skip = true
+					break
+				}
+				
+				if attr.starts_with('json:') {
+					if attr == 'json: -' {
+						is_skip = true
+						break
+					}
+					
+					name := attr[6..]
+					
+					is_unnamed = false
+					key_names << name
+				}
 			}
-		} $else {
-			encoder.encode_value(val.$(field.name))
+			if !is_skip {
+				if is_unnamed {
+					key_names << field.name
+				}
+			}
+		}
+	}
+	
+	mut i := 0
+	if key_names.len > 0 {
+		if encoder.prettify {
+			encoder.increment_level()
+			encoder.add_indent()
 		}
 		
-		if i < last {
-			encoder.output << `,`
+		$for field in T.fields {
+			encoder.encode_string(key_names[i])
+			
+			encoder.output << `:`
 			if encoder.prettify {
-				encoder.add_indent()
+				encoder.output << ` `
 			}
-		} else {
-			if encoder.prettify {
-				encoder.decrement_level()
-				encoder.add_indent()
+			
+			$if field is $option {
+				if val.$(field.name) == none {
+					unsafe { encoder.output.push_many(null_string.str, null_string.len) }
+				} else {
+					encoder.encode_value(val.$(field.name))
+				}
+			} $else {
+				encoder.encode_value(val.$(field.name))
 			}
+			
+			if i < key_names.len - 1 {
+				encoder.output << `,`
+				if encoder.prettify {
+					encoder.add_indent()
+				}
+			} else {
+				if encoder.prettify {
+					encoder.decrement_level()
+					encoder.add_indent()
+				}
+			}
+			
+			i++
 		}
-
-		i++
 	}
+	
 	encoder.output << `}`
 }
 
 fn (mut encoder Encoder) encode_custom[T](val T) {
 	integer_val := val.to_json()
+	unsafe { encoder.output.push_many(integer_val.str, integer_val.len) }
+}
+
+fn (mut encoder Encoder) encode_custom2[T](val T) {
+	integer_val := val.json_str()
 	unsafe { encoder.output.push_many(integer_val.str, integer_val.len) }
 }
 

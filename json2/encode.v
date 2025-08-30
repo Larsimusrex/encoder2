@@ -73,6 +73,8 @@ fn (mut encoder Encoder) encode_value[T](val T) {
 		encoder.encode_enum(val)
 	} $else $if T.unaliased_typ is $sumtype {
 		encoder.encode_sumtype(val)
+	} $else $if T is JsonEncoder { // uses T, because alias could be implementing JsonEncoder, while the base type does not
+		encoder.encode_custom(val)
 	} $else $if T.unaliased_typ is $struct {
 		encoder.encode_struct(val)
 	}
@@ -337,6 +339,11 @@ fn (mut encoder Encoder) encode_struct[T](val T) {
 		i++
 	}
 	encoder.output << `}`
+}
+
+fn (mut encoder Encoder) encode_custom[T](val T) {
+	integer_val := val.to_json()
+	unsafe { encoder.output.push_many(integer_val.str, integer_val.len) }
 }
 
 fn (mut encoder Encoder) increment_level() {

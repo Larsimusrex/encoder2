@@ -1,6 +1,9 @@
 module main
 
 import json2 as json
+import time
+import math.big
+import x.json2
 
 type StrAlias = string
 type BoolAlias = bool
@@ -29,6 +32,36 @@ struct Opt {
 }
 
 type OptAlias = Opt
+
+struct CustomString {
+	data string
+}
+
+pub fn (cs CustomString) to_json() string {
+	return '"<<<' + cs.data + '>>>"' 
+}
+
+type CustomStringAlias = CustomString
+
+struct Null {
+	is_null bool = true
+}
+
+pub fn (n Null) to_json() string {
+	return 'null'
+}
+
+type CustomTime = time.Time
+
+pub fn (ct CustomTime) to_json() string {
+	return ct.format_rfc3339()
+}
+
+type CustomBig = big.Integer
+
+pub fn (cb CustomBig) to_json() string {
+	return cb.str()
+}
 
 fn main() {
 	println(json.encode('hello'))
@@ -75,4 +108,11 @@ fn main() {
 	
 	println(json.encode(OptAlias{none}))
 	println(json.encode(OptAlias{99}))
+
+	println(json.encode(CustomString{'hi'}))
+	println(json.encode(CustomStringAlias{'hi'}))
+	
+	println(json.encode(Null{}))
+	println(json.encode(CustomTime(time.now())))
+	println(json.encode(CustomBig(big.integer_from_i64(1234567890))))
 }

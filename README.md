@@ -12,11 +12,11 @@ Experimental json encoder entirely written in V.
 	- [ ] embedded fields (no comptime check)
 - [ ] options (not supported by generics)
 - [ ] arrays/maps of options (see https://github.com/vlang/v/issues/24466)
-- [ ] custom encoders
-	- [ ] interface
-	- [ ] Null
-	- [ ] time.Time
-	- [ ] math.big.Integer
+- [x] custom encoders
+	- [x] interface
+	- [x] Null
+	- [x] time.Time
+	- [x] math.big.Integer
 - [ ] aliases
 	- [x] primitive types
 	- [x] arrays & maps
@@ -25,7 +25,7 @@ Experimental json encoder entirely written in V.
 	- [x] structs
 	- [ ] options (see above)
 	- [ ] arrays/maps of options (see above)
-	- [ ] custom encoders
+	- [x] custom encoders
 - [x] prettify
 - [ ] attributes
 	- [ ] json: name

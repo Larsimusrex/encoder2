@@ -149,31 +149,35 @@ fn (mut encoder Encoder) encode_string(val string) {
 				}
 				if encoder.escape_unicode {
 					if character >= 0b1111_0000 { // four bytes
-						// maybe add surrogate pair encoding for legacy systems
+						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
+						unicode_point_low := val[buffer_end..buffer_end + 4].bytes().byterune() or {0} - 0x10000
+						
+						hex_string := '\\u${0xD800 + ((unicode_point_low >> 10) & 0x3FF):04X}\\u${0xDC00 + (unicode_point_low & 0x3FF):04X}'
+						
 						buffer_end += 4
+						buffer_start = buffer_end
+						
+						unsafe { encoder.output.push_many(hex_string.str, 12) }
+						
 						continue
 					} else if character >= 0b1110_0000 { // three bytes
 						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
-						hex_string := '${val[buffer_end..buffer_end + 3].bytes().byterune() or { 0 }:04X}'
+						hex_string := '\\u${val[buffer_end..buffer_end + 3].bytes().byterune() or { 0 }:04X}'
 
 						buffer_end += 3
 						buffer_start = buffer_end
 
-						encoder.output << `\\`
-
-						unsafe { encoder.output.push_many(hex_string.str, 4) }
+						unsafe { encoder.output.push_many(hex_string.str, 6) }
 
 						continue
 					} else if character >= 0b1100_0000 { // two bytes
 						unsafe { encoder.output.push_many(val.str + buffer_start, buffer_end - buffer_start) }
-						hex_string := '${val[buffer_end..buffer_end + 2].bytes().byterune() or { 0 }:04X}'
+						hex_string := '\\u${val[buffer_end..buffer_end + 2].bytes().byterune() or { 0 }:04X}'
 
 						buffer_end += 2
 						buffer_start = buffer_end
 
-						encoder.output << `\\`
-
-						unsafe { encoder.output.push_many(hex_string.str, 4) }
+						unsafe { encoder.output.push_many(hex_string.str, 6) }
 
 						continue
 					}
@@ -308,7 +312,16 @@ fn (mut encoder Encoder) encode_struct[T](val T) {
 		if encoder.prettify {
 			encoder.output << ` `
 		}
-		encoder.encode_value(val.$(field.name))
+		$if field is $option {
+			if val.$(field.name) == none {
+				unsafe { encoder.output.push_many(null_string.str, null_string.len) }
+			} else {
+				encoder.encode_value(val.$(field.name))
+			}
+		} $else {
+			encoder.encode_value(val.$(field.name))
+		}
+		
 		if i < last {
 			encoder.output << `,`
 			if encoder.prettify {

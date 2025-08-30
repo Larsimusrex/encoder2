@@ -8,7 +8,7 @@ Experimental json encoder entirely written in V.
 - [x] sumtypes
 - [x] structs
 	- [x] fields
-	- [ ] option fields
+	- [x] option fields
 	- [ ] embedded fields (no comptime check)
 - [ ] options (not supported by generics)
 - [ ] arrays/maps of options (see https://github.com/vlang/v/issues/24466)
@@ -33,3 +33,4 @@ Experimental json encoder entirely written in V.
 - [x] string escapes
 	- [x] control characters
 	- [x] unicode
+	- [x] surroagte pairs

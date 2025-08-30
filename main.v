@@ -24,6 +24,12 @@ struct Basic {
 }
 type BasicAlias = Basic
 
+struct Opt {
+	a ?int
+}
+
+type OptAlias = Opt
+
 fn main() {
 	println(json.encode('hello'))
 	println(json.encode(StrAlias('hello')))
@@ -61,6 +67,12 @@ fn main() {
 	println(json.encode([{'hi': Basic{a: 1 b: 'a' c: false}, 'bye': Basic{a: 2 b: 'b' c: true}}, {'hi2': Basic{a: 3 b: 'c' c: false}, 'bye2': Basic{a: 4 b: 'd' c: true}}], prettify: true))
 	
 	println(json.encode('normal escapes: ", \\ special control escapes: \b, \n, \f, \t, \r, other control escapes: \0, \e'))
-	println(json.encode('é, 한, 😀'))
-	println(json.encode('é, 한, 😀', escape_unicode: true))
+	println(json.encode('ascii, é, 한, 😀, ascii'))
+	println(json.encode('ascii, é, 한, 😀, ascii', escape_unicode: true))
+	
+	println(json.encode(Opt{none}))
+	println(json.encode(Opt{99}))
+	
+	println(json.encode(OptAlias{none}))
+	println(json.encode(OptAlias{99}))
 }

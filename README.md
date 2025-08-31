@@ -3,12 +3,14 @@
 Experimental json encoder entirely written in V. 
 
 - [x] primitive types
+- [ ] pointers (see https://github.com/vlang/v/issues/25208)
 - [x] arrays & maps
 - [x] enums
 - [x] sumtypes
 - [x] structs
 	- [x] fields
 	- [x] option fields
+	- [ ] pointer fields (see above)
 	- [ ] embedded fields (no comptime check)
 - [ ] options (not supported by generics)
 - [ ] arrays/maps of options (see https://github.com/vlang/v/issues/24466)

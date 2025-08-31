@@ -183,4 +183,10 @@ fn main() {
 	println(json.encode(SkipFields{ a: 1, name: 'john' },
 		prettify: true
 	))
+	
+	println(json.encode(&Basic{
+		a: 10
+		b: 'hi'
+		c: true
+	}))
 }

@@ -21,6 +21,7 @@ Experimental json encoder entirely written in V.
 	- [x] math.big.Integer
 - [ ] aliases
 	- [x] primitive types
+	- [ ] pointers (see above)
 	- [x] arrays & maps
 	- [x] enums
 	- [x] sumtypes

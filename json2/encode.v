@@ -310,23 +310,37 @@ fn (mut encoder Encoder) encode_sumtype[T](val T) {
 	}
 }
 
+struct EncoderFieldInfo {
+	key_name string
+	
+	is_skip bool
+	is_omitempty bool
+}
+
 @[unsafe]
 fn (mut encoder Encoder) encode_struct[T](val T) {
 	encoder.output << `{`
 	
-	static key_names := &[]string(nil)
+	static field_infos := &[]EncoderFieldInfo(nil)
 	
-	if key_names == nil {
-		key_names = &[]string{}
+	if field_infos == nil {
+		field_infos = &[]EncoderFieldInfo{}
 		
 		$for field in T.fields {
 			mut is_skip := false
-			mut is_unnamed := true
+			mut key_name := ''
+			mut is_omitempty := false
 			
 			for attr in field.attrs {
-				if attr == 'skip' {
-					is_skip = true
-					break
+				match attr {
+					'skip' { 
+						is_skip = true
+						break
+					}
+					'omitempty' {
+						is_omitempty = true
+					}
+					else {}
 				}
 				
 				if attr.starts_with('json:') {
@@ -334,30 +348,45 @@ fn (mut encoder Encoder) encode_struct[T](val T) {
 						is_skip = true
 						break
 					}
-					
-					name := attr[6..]
-					
-					is_unnamed = false
-					key_names << name
+
+					key_name = attr[6..]
 				}
 			}
-			if !is_skip {
-				if is_unnamed {
-					key_names << field.name
-				}
+			field_infos << EncoderFieldInfo {
+				key_name: if key_name == '' {field.name} else {key_name}
+				is_skip: is_skip
+				is_omitempty: is_omitempty
 			}
 		}
 	}
 	
 	mut i := 0
-	if key_names.len > 0 {
-		if encoder.prettify {
-			encoder.increment_level()
-			encoder.add_indent()
+	mut is_first := true
+	$for field in T.fields {
+		field_info := field_infos[i]
+		i++
+		
+		mut write_field := true
+		
+		if field_info.is_skip {
+			write_field = false
+		} else if field_info.is_omitempty {
+			
 		}
 		
-		$for field in T.fields {
-			encoder.encode_string(key_names[i])
+		
+		if write_field {
+			if encoder.prettify {
+				if is_first {
+					encoder.increment_level()
+					is_first = false
+				} else {
+					encoder.output << `,`
+				}
+				encoder.add_indent()
+			}
+			
+			encoder.encode_string(field_info.key_name)
 			
 			encoder.output << `:`
 			if encoder.prettify {
@@ -373,21 +402,12 @@ fn (mut encoder Encoder) encode_struct[T](val T) {
 			} $else {
 				encoder.encode_value(val.$(field.name))
 			}
-			
-			if i < key_names.len - 1 {
-				encoder.output << `,`
-				if encoder.prettify {
-					encoder.add_indent()
-				}
-			} else {
-				if encoder.prettify {
-					encoder.decrement_level()
-					encoder.add_indent()
-				}
-			}
-			
-			i++
 		}
+	}
+	
+	if !is_first {
+		encoder.decrement_level()
+		encoder.add_indent()
 	}
 	
 	encoder.output << `}`

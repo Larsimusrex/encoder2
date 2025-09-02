@@ -78,6 +78,14 @@ struct SkipFields {
 
 type SkipFieldsAlias = SkipFields
 
+struct SkipSomeFields {
+	a    int    @[json: '-']
+	name string @[skip]
+	hi bool = true
+}
+
+type SkipSomeFieldsAlias = SkipSomeFields
+
 fn main() {
 	println(json.encode('hello'))
 	println(json.encode(StrAlias('hello')))
@@ -184,9 +192,15 @@ fn main() {
 		prettify: true
 	))
 	
-	println(json.encode(&Basic{
-		a: 10
-		b: 'hi'
-		c: true
-	}))
+	println(json.encode(SkipSomeFields{ a: 1, name: 'john' }))
+	println(json.encode(SkipSomeFieldsAlias{ a: 1, name: 'john' }))
+	println(json.encode(SkipSomeFields{ a: 1, name: 'john' },
+		prettify: true
+	))
+	
+// 	println(json.encode(&Basic{
+// 		a: 10
+// 		b: 'hi'
+// 		c: true
+// 	}))
 }

@@ -81,10 +81,26 @@ type SkipFieldsAlias = SkipFields
 struct SkipSomeFields {
 	a    int    @[json: '-']
 	name string @[skip]
-	hi bool = true
+	hi   bool = true
 }
 
 type SkipSomeFieldsAlias = SkipSomeFields
+
+struct PointerFields {
+	next &PointerFields = unsafe { nil }
+	data int
+}
+
+type PointerFieldsAlias = PointerFields
+
+struct OmitFields {
+	a ?bool  @[omitempty]
+	b string @[omitempty]
+	c int    @[omitempty]
+	d f64    @[omitempty]
+}
+
+type OmitFieldsAlias = OmitFields
 
 fn main() {
 	println(json.encode('hello'))
@@ -191,16 +207,57 @@ fn main() {
 	println(json.encode(SkipFields{ a: 1, name: 'john' },
 		prettify: true
 	))
-	
+
 	println(json.encode(SkipSomeFields{ a: 1, name: 'john' }))
 	println(json.encode(SkipSomeFieldsAlias{ a: 1, name: 'john' }))
 	println(json.encode(SkipSomeFields{ a: 1, name: 'john' },
 		prettify: true
 	))
+
+	println(json.encode(PointerFields{
+		next: &PointerFields{
+			next: &PointerFields{
+				next: &PointerFields{
+					data: 4
+				}
+				data: 3
+			}
+			data: 2
+		}
+		data: 1
+	}))
+	println(json.encode(PointerFieldsAlias{
+		next: &PointerFieldsAlias{
+			next: &PointerFieldsAlias{
+				next: &PointerFieldsAlias{
+					data: 4
+				}
+				data: 3
+			}
+			data: 2
+		}
+		data: 1
+	}))
+	println(json.encode(PointerFields{
+		next: &PointerFields{
+			next: &PointerFields{
+				next: &PointerFields{
+					data: 4
+				}
+				data: 3
+			}
+			data: 2
+		}
+		data: 1
+	},
+		prettify: true
+	))
 	
-// 	println(json.encode(&Basic{
-// 		a: 10
-// 		b: 'hi'
-// 		c: true
-// 	}))
+	println(json.encode(OmitFields{}))
+	println(json.encode(OmitFieldsAlias{}))
+	// 	println(json.encode(&Basic{
+	// 		a: 10
+	// 		b: 'hi'
+	// 		c: true
+	// 	}))
 }
